@@ -1,0 +1,55 @@
+﻿@page "/events"
+
+@inject EventService EventService
+@inject NavigationManager NavigationManager
+@inject UserSessionService UserSessionService
+@inject AttendanceService AttendanceService
+
+<PageTitle>Events</PageTitle>
+
+<h2>Here is A list of events that your can currently attend to:</h2>
+
+@if (UserSessionService.IsLoggedIn)
+{
+    @if (EventService.Events == null || EventService.Events.Count == 0)
+    {
+        <p>No events available.</p>
+    }
+    else
+    {
+        @foreach (var @eventItem in EventService.Events)
+        {
+            <EventCard EventId="@eventItem.Key" AlreadyRegistered = "@CheckRegistration(eventItem.Key)"/>
+        }
+    }
+}
+else
+{
+    <h3>You need to register first to be able to browse and check in for listed events!</h3>
+    <button class="btn btn-primary" @onclick="Register">Register</button>
+}
+
+@code {
+    private RegistrationModel? currentUser; 
+
+    protected override void OnInitialized()
+    {
+        currentUser = UserSessionService.GetCurrentUser();
+        AttendanceService.OnAttendanceChange += StateHasChanged;
+    }
+
+    private bool CheckRegistration(int eventId)
+    {
+        return AttendanceService.IsUserAttending(eventId, currentUser);
+    }
+
+    private void Register()
+    {
+        NavigationManager.NavigateTo("/register");
+    }
+
+    public void Dispose()
+    {
+        AttendanceService.OnAttendanceChange -= StateHasChanged;
+    }
+}

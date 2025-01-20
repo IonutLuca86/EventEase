@@ -1,0 +1,76 @@
+﻿@page "/event/{eventId:int}"
+@using EventEase.Models
+@using EventEase.Services
+@inject EventService EventService
+@inject NavigationManager Navigation
+@inject UserSessionService UserSessionService
+@inject AttendanceService AttendanceService
+
+<PageTitle>Event Details</PageTitle>
+
+<h3 class="mb-3">Event Details</h3>
+
+@if (eventItem == null)
+{
+    <p>No event selected.</p>
+}
+else
+{
+    <div>
+        <div class="mb-5">
+            <button class="btn btn-secondary me-2" @onclick="NavigateBack">Back to Events List</button>
+            @if (alreadyRegistered)
+            {
+                <button class="btn btn-success" @onclick="UnRegister">Unregister from this event</button>
+            }
+            else
+            {
+                <button class="btn btn-primary" @onclick="Register">Register to This event</button>
+            }
+            
+        </div>
+
+        <div class="event-card ">
+            <h1 style="color: blue;">@eventItem.Name</h1>
+            <p><strong>Date:</strong> @eventItem.Date.ToString("MMMM dd, yyyy")</p>
+            <p><strong>Location:</strong> @eventItem.Location</p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int eventId { get; set; }
+
+    private Event eventItem => EventService.Events.ContainsKey(eventId) ? EventService.Events[eventId] : null;
+    private RegistrationModel currentUser;
+    private bool alreadyRegistered = false;
+
+    protected override void OnInitialized()
+    {
+        currentUser = UserSessionService.GetCurrentUser();
+        if(currentUser != null)
+        {
+            alreadyRegistered = AttendanceService.IsUserAttending(eventId, currentUser);
+        }
+        
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/events");
+    }
+
+    private void Register()
+    {            
+        AttendanceService.TrackAttendance(eventId, currentUser, true);
+        alreadyRegistered = true;
+        StateHasChanged();
+    }
+    private void UnRegister()
+    {
+        AttendanceService.TrackAttendance(eventId,currentUser, false);
+        alreadyRegistered = false;
+        StateHasChanged();
+    }
+}

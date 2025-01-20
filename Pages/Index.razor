@@ -1,0 +1,16 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+
+<h1>Welcome to EventEase web portal!</h1>
+
+<h3>You need to register first to be able to browse and check in for listed events!</h3>
+
+<button class="btn btn-primary" @onclick="Register">Register</button>
+
+
+@code {
+    private void Register()
+    {
+        NavigationManager.NavigateTo("/register");
+    }
+}
